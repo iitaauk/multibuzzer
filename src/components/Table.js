@@ -11,7 +11,7 @@ export default function Table(game) {
     some(game.G.queue, (o) => o.id === game.playerID)
   );
   const [lastBuzz, setLastBuzz] = useState(null);
-  const [sound, setSound] = useState(false);
+  const [sound, setSound] = useState(true);
   const [soundPlayed, setSoundPlayed] = useState(false);
   const buzzButton = useRef(null);
   const queueRef = useRef(null);
@@ -139,6 +139,7 @@ export default function Table(game) {
         }
         sound={sound}
         setSound={() => setSound(!sound)}
+        isHost={isHost}
       />
       <Container>
         <section>

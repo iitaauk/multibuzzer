@@ -384,3 +384,55 @@ body {
 .App .dim {
   opacity: 0.5;
 }
+
+/* QR MODAL styling */
+.qr-modal .modal-content {
+  background-color: var(--lightBackgroundColor);
+  color: white;
+  border: 1px solid var(--activeColor);
+  border-radius: 8px;
+}
+
+.qr-modal .modal-header {
+  border-bottom: 1px solid var(--activeColor);
+}
+
+.qr-modal .modal-header .close {
+  color: white;
+  text-shadow: none;
+  opacity: 0.8;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  padding: 0;
+  margin: -1rem -1rem -1rem auto;
+}
+
+.qr-modal .modal-header .close:hover {
+  opacity: 1;
+}
+
+.qr-modal .modal-body {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.qr-modal .qr-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 12px;
+  display: inline-block;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.qr-modal a {
+  color: var(--lightBlueColor);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.qr-modal a:hover {
+  color: var(--hoverBlueColor);
+  text-decoration: none;
+}
