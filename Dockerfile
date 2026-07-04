@@ -32,4 +32,4 @@ EXPOSE 4001
 ENV NODE_ENV=production
 ENV PORT=4001
 
-CMD ["node", "-r", "esm", "src/server.js"]
+CMD ["node", "src/server.js"]
