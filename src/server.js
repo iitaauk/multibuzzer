@@ -95,9 +95,9 @@ app.use(async (ctx, next) => {
           return;
         }
 
-        // Verify if hostPlayerID is the actual host (lowest registered player ID with a name)
+        // Verify if hostPlayerID is the actual host (lowest registered player ID with a name who is currently connected)
         const registeredPlayers = Object.entries(metadata.players)
-          .filter(([id, p]) => p.name)
+          .filter(([id, p]) => p.name && p.connected)
           .map(([id, p]) => ({ ...p, id: parseInt(id, 10) }));
 
         const sortedPlayers = registeredPlayers.sort((a, b) => a.id - b.id);
