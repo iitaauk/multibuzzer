@@ -26,7 +26,7 @@ This document describes the high-level architecture, tech stack, and key workflo
 │   │   ├── Lobby.js        # Home page; Join room / Host room forms
 │   │   └── Game.js         # Wrapper initiating the boardgame.io socket client
 │   ├── lib/
-│   │   ├── endpoints.js    # Axios client wrapper for backend API calls
+│   │   ├── endpoints.js    # Fetch API client wrapper for backend API calls
 │   │   └── store.js        # Game state definitions, moves, and boardgame.io config
 │   ├── App.js              # Routing, layout, and client-side auth state
 │   ├── App.css             # Main styling, custom color variables (dark mode)
