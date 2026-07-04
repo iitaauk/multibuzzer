@@ -4,6 +4,7 @@ import { Howl } from 'howler';
 import { AiOutlineDisconnect } from 'react-icons/ai';
 import { Container } from 'react-bootstrap';
 import Header from '../components/Header';
+import { kickPlayer, getRoom } from '../lib/endpoints';
 
 export default function Table(game) {
   const [loaded, setLoaded] = useState(false);
@@ -84,6 +85,80 @@ export default function Table(game) {
     window.addEventListener('keydown', onKeydown);
     return () => window.removeEventListener('keydown', onKeydown);
   }, []);
+
+  // check if kicked out of room
+  useEffect(() => {
+    if (loaded && game.gameMetadata && game.playerID) {
+      const myMeta = game.gameMetadata.find(
+        (p) => String(p.id) === String(game.playerID)
+      );
+      if (!myMeta || !myMeta.name) {
+        game.headerData.setAuth({
+          playerID: null,
+          credentials: null,
+          roomID: null,
+        });
+        alert('You have been kicked from the room.');
+      }
+    }
+  }, [loaded, game.gameMetadata, game.playerID, game.headerData]);
+
+  // check if kicked out of room when disconnected
+  useEffect(() => {
+    let interval;
+    if (!game.isConnected && game.playerID && game.gameID) {
+      const checkKicked = async () => {
+        try {
+          const res = await getRoom(game.gameID);
+          if (res.status === 200) {
+            const room = res.data;
+            const myMeta = room.players.find(
+              (p) => String(p.id) === String(game.playerID)
+            );
+            if (!myMeta || !myMeta.name) {
+              game.headerData.setAuth({
+                playerID: null,
+                credentials: null,
+                roomID: null,
+              });
+              alert('You have been kicked from the room.');
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      checkKicked();
+      interval = setInterval(checkKicked, 5000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [game.isConnected, game.playerID, game.gameID, game.headerData]);
+
+  const handleKick = async (idToKick) => {
+    const playerToKick =
+      game.gameMetadata &&
+      game.gameMetadata.find((p) => String(p.id) === String(idToKick));
+    const nameToKick = playerToKick ? playerToKick.name : 'this player';
+    if (window.confirm(`Are you sure you want to kick ${nameToKick}?`)) {
+      try {
+        const response = await kickPlayer(
+          game.gameID,
+          idToKick,
+          game.playerID,
+          game.headerData.credentials
+        );
+        if (response.status !== 200) {
+          alert(response.data.error || 'Failed to kick player');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to kick player');
+      }
+    }
+  };
 
   const players = !game.gameMetadata
     ? []
@@ -187,27 +262,40 @@ export default function Table(game) {
           <ul>
             {buzzedPlayers.map(({ id, name, timestamp, connected }, i) => (
               <li key={id} className={isHost ? 'resettable' : null}>
-                <div
-                  className="player-sign"
-                  onClick={() => {
-                    if (isHost) {
-                      game.moves.resetBuzzer(id);
-                    }
-                  }}
-                >
-                  <div className={`name ${!connected ? 'dim' : ''}`}>
-                    {name}
-                    {!connected ? (
-                      <AiOutlineDisconnect className="disconnected" />
-                    ) : (
-                      ''
-                    )}
-                  </div>
-                  {i > 0 ? (
-                    <div className="mini">
-                      {timeDisplay(timestamp - queue[0].timestamp)}
+                <div className="player-row">
+                  <div
+                    className="player-sign"
+                    onClick={() => {
+                      if (isHost) {
+                        game.moves.resetBuzzer(id);
+                      }
+                    }}
+                  >
+                    <div className={`name ${!connected ? 'dim' : ''}`}>
+                      {name}
+                      {!connected ? (
+                        <AiOutlineDisconnect className="disconnected" />
+                      ) : (
+                        ''
+                      )}
                     </div>
-                  ) : null}
+                    {i > 0 ? (
+                      <div className="mini">
+                        {timeDisplay(timestamp - queue[0].timestamp)}
+                      </div>
+                    ) : null}
+                  </div>
+                  {isHost && id !== game.playerID && (
+                    <button
+                      className="kick-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleKick(id);
+                      }}
+                    >
+                      Kick
+                    </button>
+                  )}
                 </div>
               </li>
             ))}
@@ -218,12 +306,25 @@ export default function Table(game) {
           <ul>
             {activePlayers.map(({ id, name, connected }) => (
               <li key={id}>
-                <div className={`name ${!connected ? 'dim' : ''}`}>
-                  {name}
-                  {!connected ? (
-                    <AiOutlineDisconnect className="disconnected" />
-                  ) : (
-                    ''
+                <div className="player-row">
+                  <div className={`name ${!connected ? 'dim' : ''}`}>
+                    {name}
+                    {!connected ? (
+                      <AiOutlineDisconnect className="disconnected" />
+                    ) : (
+                      ''
+                    )}
+                  </div>
+                  {isHost && id !== game.playerID && (
+                    <button
+                      className="kick-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleKick(id);
+                      }}
+                    >
+                      Kick
+                    </button>
                   )}
                 </div>
               </li>

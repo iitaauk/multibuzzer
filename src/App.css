@@ -436,3 +436,29 @@ body {
   color: var(--hoverBlueColor);
   text-decoration: none;
 }
+
+/* PLAYER ROW & KICK BUTTON */
+.App .player-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.App .kick-button {
+  background: none;
+  border: 1px solid var(--redColor);
+  color: var(--lightRedColor);
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 10px;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: all 0.1s ease-in-out;
+}
+
+.App .kick-button:hover {
+  background-color: var(--redColor);
+  color: white;
+}
+

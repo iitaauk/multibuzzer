@@ -1,4 +1,4 @@
-import { ActivePlayers } from 'boardgame.io/core';
+const { ActivePlayers } = require('boardgame.io/core');
 
 function resetBuzzers(G) {
   G.queue = {};
@@ -25,7 +25,7 @@ function buzz(G, ctx, id) {
   G.queue = newQueue;
 }
 
-export const Buzzer = {
+const Buzzer = {
   name: 'buzzer',
   minPlayers: 2,
   maxPlayers: 200,
@@ -40,3 +40,5 @@ export const Buzzer = {
     },
   },
 };
+
+module.exports = { Buzzer };

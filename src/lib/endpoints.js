@@ -84,3 +84,23 @@ export async function leaveRoom(roomID, playerID, credentials) {
     }
   }
 }
+
+export async function kickPlayer(roomID, playerID, hostPlayerID, credentials) {
+  try {
+    const response = await axios.post(
+      `${LOBBY_SERVER}/games/${Buzzer.name}/${roomID}/kick`,
+      {
+        playerID,
+        hostPlayerID,
+        credentials,
+      }
+    );
+    return response;
+  } catch (error) {
+    if (error.response) {
+      return error.response;
+    } else {
+      return { status: 500 };
+    }
+  }
+}

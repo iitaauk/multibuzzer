@@ -1,7 +1,8 @@
-import path from 'path';
-import serve from 'koa-static';
-import ratelimit from 'koa-ratelimit';
-import { v4 as uuidv4 } from 'uuid';
+const path = require('path');
+const serve = require('koa-static');
+const ratelimit = require('koa-ratelimit');
+const { v4: uuidv4 } = require('uuid');
+const koaBody = require('koa-body');
 
 const Server = require('boardgame.io/server').Server;
 const Buzzer = require('./lib/store').Buzzer;
@@ -43,6 +44,149 @@ app.use(
     },
   })
 );
+
+const parseBody = koaBody();
+
+app.use(async (ctx, next) => {
+  const match = ctx.path.match(/^\/games\/buzzer\/([^\/]+)\/kick$/i);
+  if (match) {
+    // Add CORS headers for preflight and actual requests
+    ctx.set('Access-Control-Allow-Origin', '*');
+    ctx.set(
+      'Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept'
+    );
+    ctx.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+
+    if (ctx.method === 'OPTIONS') {
+      ctx.status = 204;
+      return;
+    }
+
+    if (ctx.method === 'POST') {
+      await parseBody(ctx, async () => {});
+      const gameID = match[1].toUpperCase();
+      const { playerID, hostPlayerID, credentials } = ctx.request.body;
+
+      try {
+        const fetchResult = await server.db.fetch(gameID, {
+          metadata: true,
+          state: true,
+          log: true,
+          initialState: true,
+        });
+        const metadata = fetchResult ? fetchResult.metadata : null;
+
+        if (!metadata) {
+          ctx.status = 404;
+          ctx.body = { error: `Game ${gameID} not found` };
+          return;
+        }
+
+        if (!metadata.players[hostPlayerID]) {
+          ctx.status = 404;
+          ctx.body = { error: `Host player not found` };
+          return;
+        }
+
+        if (credentials !== metadata.players[hostPlayerID].credentials) {
+          ctx.status = 403;
+          ctx.body = { error: 'Invalid credentials' };
+          return;
+        }
+
+        // Verify if hostPlayerID is the actual host (lowest registered player ID with a name)
+        const registeredPlayers = Object.entries(metadata.players)
+          .filter(([id, p]) => p.name)
+          .map(([id, p]) => ({ ...p, id: parseInt(id, 10) }));
+
+        const sortedPlayers = registeredPlayers.sort((a, b) => a.id - b.id);
+        const expectedHostID =
+          sortedPlayers.length > 0 ? String(sortedPlayers[0].id) : null;
+
+        if (String(hostPlayerID) !== expectedHostID) {
+          ctx.status = 403;
+          ctx.body = { error: 'Only the host can kick players' };
+          return;
+        }
+
+        if (!metadata.players[playerID] || !metadata.players[playerID].name) {
+          ctx.status = 404;
+          ctx.body = { error: `Player ${playerID} not found in this room` };
+          return;
+        }
+
+        // Kick the player by removing name and credentials
+        delete metadata.players[playerID].name;
+        delete metadata.players[playerID].credentials;
+
+        if (Object.values(metadata.players).some((val) => val.name)) {
+          await server.db.setMetadata(gameID, metadata);
+        } else {
+          await server.db.wipe(gameID);
+        }
+
+        // Clean up from state G.queue if player is in it
+        if (fetchResult && fetchResult.state) {
+          const state = fetchResult.state;
+          if (state.G && state.G.queue && state.G.queue[playerID]) {
+            const newQueue = { ...state.G.queue };
+            delete newQueue[playerID];
+            state.G.queue = newQueue;
+            await server.db.setState(gameID, state);
+          }
+        }
+
+        // Disconnect the kicked player's socket
+        const activeSockets = ctx.app.context.activeSockets;
+        if (activeSockets) {
+          for (const info of activeSockets.values()) {
+            if (
+              info.gameID === gameID &&
+              String(info.playerID) === String(playerID)
+            ) {
+              info.socket.disconnect(true);
+            }
+          }
+        }
+
+        // Broadcast the sync event to all remaining connected sockets for this game
+        if (activeSockets) {
+          const filteredMetadata = Object.values(metadata.players).map((p) => ({
+            id: p.id,
+            name: p.name,
+            connected: p.connected || false,
+          }));
+          for (const info of activeSockets.values()) {
+            if (info.gameID === gameID && String(info.playerID) !== String(playerID)) {
+              const syncInfo = {
+                state: {
+                  ...fetchResult.state,
+                  deltalog: undefined,
+                  _undo: [],
+                  _redo: [],
+                },
+                log: fetchResult.log || [],
+                filteredMetadata,
+                initialState: fetchResult.initialState,
+              };
+              info.socket.emit('sync', gameID, syncInfo);
+            }
+          }
+        }
+
+        ctx.status = 200;
+        ctx.body = { success: true };
+      } catch (err) {
+        console.error('Error kicking player:', err);
+        ctx.status = 500;
+        ctx.body = { error: 'Internal server error' };
+      }
+      return;
+    }
+  }
+  await next();
+});
 
 const roomLifetimes = new Map();
 
@@ -149,6 +293,24 @@ server.run(
 
     // Start the daily restart scheduler
     scheduleDailyRestart();
+
+    // Set up our active connections tracker
+    const io = server.app._io;
+    if (io) {
+      const nsp = io.of('/buzzer');
+      const activeSockets = new Map();
+      server.app.context.activeSockets = activeSockets;
+
+      nsp.on('connection', (socket) => {
+        socket.on('sync', (gameID, playerID) => {
+          activeSockets.set(socket.id, { gameID, playerID, socket });
+        });
+
+        socket.on('disconnect', () => {
+          activeSockets.delete(socket.id);
+        });
+      });
+    }
 
     // rewrite rule for catching unresolved routes and redirecting to index.html
     // for client-side routing
