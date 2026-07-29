@@ -2,7 +2,7 @@ const path = require('path');
 const serve = require('koa-static');
 const ratelimit = require('koa-ratelimit');
 const { v4: uuidv4 } = require('uuid');
-const koaBody = require('koa-body');
+const { koaBody } = require('koa-body');
 
 const Server = require('boardgame.io/server').Server;
 const Buzzer = require('./lib/store').Buzzer;
