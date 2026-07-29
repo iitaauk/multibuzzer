@@ -24,7 +24,15 @@
     "uuid": "^14.0.1"
   },
   "resolutions": {
-    "koa": "^2.16.3"
+    "koa": "^2.16.3",
+    "semver": "^7.6.3",
+    "flatted": "^3.4.2",
+    "socket.io-parser": "^3.4.4",
+    "@koa/cors": "^5.0.0",
+    "uuid": "^8.3.2",
+    "parseuri": "^3.0.2",
+    "debug": "^4.3.4",
+    "cookie": "^0.7.1"
   },
   "devDependencies": {
     "concurrently": "^5.1.0",
