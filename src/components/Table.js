@@ -120,7 +120,7 @@ export default function Table(game) {
           credentials: null,
           roomID: null,
         });
-        alert('You have been kicked from the room.');
+        alert('You have been removed from the room.');
       }
     }
   }, [loaded, game.matchData, game.playerID, game.headerData]);
@@ -143,7 +143,7 @@ export default function Table(game) {
                 credentials: null,
                 roomID: null,
               });
-              alert('You have been kicked from the room.');
+              alert('You have been removed from the room.');
             }
           }
         } catch (err) {

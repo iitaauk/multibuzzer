@@ -270,6 +270,101 @@ app.use(async (ctx, next) => {
   await next();
 });
 
+// boardgame.io's own /leave route only mutates the DB — unlike this app's
+// custom /kick and /reclaim routes, it never pushes anything to already
+// -connected sockets (matchData is only ever pushed by boardgame.io itself
+// on a socket connect/disconnect, via onConnectionChange), so without this,
+// other players' rosters go stale until something else happens to trigger
+// a resync. This wraps around boardgame.io's real route (letting it run
+// via next()) rather than reimplementing it, then broadcasts the fresh
+// roster and cleans up the departing player's queue entry the same way
+// /kick does, for the same reason: G is frozen after the first move, so a
+// leftover buzz would otherwise block whoever later fills that seat.
+app.use(async (ctx, next) => {
+  const match = ctx.path.match(/^\/games\/buzzer\/([^\/]+)\/leave$/i);
+  const isLeave = match && ctx.method === 'POST';
+
+  await next();
+
+  if (isLeave && ctx.status === 200) {
+    const gameID = match[1].toUpperCase();
+    // boardgame.io's own route (via its own per-route koaBody()) parses the
+    // body during next() above, so ctx.request.body is only populated now.
+    const playerID = ctx.request.body && ctx.request.body.playerID;
+    try {
+      let fetchResult = await server.db.fetch(gameID, {
+        metadata: true,
+        state: true,
+        log: true,
+        initialState: true,
+      });
+      let metadata = fetchResult ? fetchResult.metadata : null;
+
+      // Match still exists (i.e. this wasn't the last player leaving, which
+      // wipes the room entirely) - clean up and notify.
+      if (metadata) {
+        if (
+          playerID !== null &&
+          playerID !== undefined &&
+          fetchResult.state &&
+          fetchResult.state.G &&
+          fetchResult.state.G.queue &&
+          fetchResult.state.G.queue[playerID]
+        ) {
+          const newQueue = { ...fetchResult.state.G.queue };
+          delete newQueue[playerID];
+          const state = {
+            ...fetchResult.state,
+            G: { ...fetchResult.state.G, queue: newQueue },
+          };
+          await server.db.setState(gameID, state);
+          // Re-fetch so the broadcast below carries the updated state, not
+          // the pre-cleanup snapshot.
+          fetchResult = await server.db.fetch(gameID, {
+            metadata: true,
+            state: true,
+            log: true,
+            initialState: true,
+          });
+          metadata = fetchResult.metadata;
+        }
+
+        const activeSockets = ctx.app.context.activeSockets;
+        if (activeSockets) {
+          const filteredMetadata = Object.values(metadata.players).map((p) => ({
+            id: p.id,
+            name: p.name,
+            isConnected: p.isConnected || false,
+          }));
+          const syncInfo = {
+            state: {
+              ...fetchResult.state,
+              deltalog: undefined,
+              _undo: [],
+              _redo: [],
+            },
+            log: fetchResult.log || [],
+            filteredMetadata,
+            initialState: fetchResult.initialState,
+          };
+          for (const info of activeSockets.values()) {
+            // Skip the leaving player's own socket: they already know they
+            // left, and this broadcast is only for everyone else's view.
+            if (
+              info.gameID === gameID &&
+              String(info.playerID) !== String(playerID)
+            ) {
+              info.socket.emit('sync', gameID, syncInfo);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error broadcasting after leave:', err);
+    }
+  }
+});
+
 const roomLifetimes = new Map();
 
 function startRoomCleanupCron(serverInstance, intervalMs = 60000) {
