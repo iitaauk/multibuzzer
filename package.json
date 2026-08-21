@@ -1,6 +1,6 @@
 {
   "name": "multibuzzer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "iamwillsun@gmail.com",
   "license": "MIT",
   "repository": "https://github.com/wsun/multibuzzer",
@@ -38,7 +38,7 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "^14.3.1",
     "concurrently": "^5.1.0",
     "eslint-config-prettier": "^8.7.0",
