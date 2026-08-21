@@ -65,3 +65,33 @@ To view logs from the running container:
 ```bash
 docker compose logs -f
 ```
+
+---
+
+### Running Tests
+
+The test suite has two parts: backend integration/unit tests (Jest, run against a real server instance) and frontend component tests (via Create React App's bundled Jest).
+
+Install dependencies first if you haven't:
+
+```bash
+yarn install
+```
+
+Run the backend suite (room lifecycle, buzzing, kick/leave, connection tracking, rate limiting, the cleanup cron, and more):
+
+```bash
+yarn test:integration
+```
+
+Run the frontend suite (React Testing Library):
+
+```bash
+CI=true yarn test
+```
+
+Run both together:
+
+```bash
+yarn test:all
+```
