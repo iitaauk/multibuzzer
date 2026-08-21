@@ -251,6 +251,7 @@ export default function Table(game) {
           <div id="buzzer">
             <button
               ref={buzzButton}
+              className={game.G.locked ? 'locked' : buzzed ? 'buzzed' : ''}
               disabled={buzzed || game.G.locked}
               onClick={() => {
                 if (!buzzed && !game.G.locked) {
@@ -285,77 +286,92 @@ export default function Table(game) {
         </section>
         <div className="queue">
           <p>Players Buzzed</p>
-          <ul>
-            {buzzedPlayers.map(({ id, name, timestamp, connected }, i) => (
-              <li key={id} className={isHost ? 'resettable' : null}>
-                <div className="player-row">
-                  <div
-                    className="player-sign"
-                    onClick={() => {
-                      if (isHost) {
-                        game.moves.resetBuzzer(id);
-                      }
-                    }}
-                  >
-                    <div className={`name ${!connected ? 'dim' : ''}`}>
-                      {name}
-                      {!connected ? (
-                        <AiOutlineDisconnect className="disconnected" />
-                      ) : (
-                        ''
-                      )}
-                    </div>
-                    {i > 0 ? (
-                      <div className="mini">
-                        {timeDisplay(timestamp - queue[0].timestamp)}
-                      </div>
-                    ) : null}
-                  </div>
-                  {isHost && id !== game.playerID && (
-                    <button
-                      className="kick-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleKick(id);
+          {isEmpty(buzzedPlayers) ? (
+            <p className="empty-state">No one has buzzed yet</p>
+          ) : (
+            <ul>
+              {buzzedPlayers.map(({ id, name, timestamp, connected }, i) => (
+                <li key={id} className={isHost ? 'resettable' : null}>
+                  <div className="player-row">
+                    <div
+                      className="player-sign"
+                      onClick={() => {
+                        if (isHost) {
+                          game.moves.resetBuzzer(id);
+                        }
                       }}
                     >
-                      Kick
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                      <span className="rank">{i + 1}</span>
+                      <div className="player-info">
+                        <div className={`name ${!connected ? 'dim' : ''}`}>
+                          {name}
+                          {!connected ? (
+                            <AiOutlineDisconnect className="disconnected" />
+                          ) : (
+                            ''
+                          )}
+                        </div>
+                        {i > 0 ? (
+                          <div className="mini">
+                            {timeDisplay(timestamp - queue[0].timestamp)}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                    {isHost && id !== game.playerID && (
+                      <button
+                        className="kick-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleKick(id);
+                        }}
+                      >
+                        Kick
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="queue">
           <p>Other Players</p>
-          <ul>
-            {activePlayers.map(({ id, name, connected }) => (
-              <li key={id}>
-                <div className="player-row">
-                  <div className={`name ${!connected ? 'dim' : ''}`}>
-                    {name}
-                    {!connected ? (
-                      <AiOutlineDisconnect className="disconnected" />
-                    ) : (
-                      ''
+          {isEmpty(activePlayers) ? (
+            <p className="empty-state">Everyone has buzzed</p>
+          ) : (
+            <ul>
+              {activePlayers.map(({ id, name, connected }) => (
+                <li key={id}>
+                  <div className="player-row">
+                    <div className="player-sign">
+                      <div className="player-info">
+                        <div className={`name ${!connected ? 'dim' : ''}`}>
+                          {name}
+                          {!connected ? (
+                            <AiOutlineDisconnect className="disconnected" />
+                          ) : (
+                            ''
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {isHost && id !== game.playerID && (
+                      <button
+                        className="kick-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleKick(id);
+                        }}
+                      >
+                        Kick
+                      </button>
                     )}
                   </div>
-                  {isHost && id !== game.playerID && (
-                    <button
-                      className="kick-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleKick(id);
-                      }}
-                    >
-                      Kick
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </Container>
     </div>

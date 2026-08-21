@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Form } from 'react-bootstrap';
 import { useLocation, useHistory } from 'react-router-dom';
 import { get } from 'lodash';
+import { AiOutlineTeam, AiOutlineMobile, AiOutlineHeart } from 'react-icons/ai';
 import { joinRoom, reclaimRoom, getRoom, createRoom } from '../lib/endpoints';
 import Header from '../components/Header';
 import Footer, { FooterSimple } from '../components/Footer';
@@ -124,9 +125,38 @@ export default function Lobby({ setAuth }) {
     }
   }
 
+  const modeTabs = (
+    <div className="mode-tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={joinMode}
+        className={joinMode ? 'active' : ''}
+        onClick={() => {
+          setError('');
+          setJoinMode(true);
+        }}
+      >
+        Join a game
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={!joinMode}
+        className={!joinMode ? 'active' : ''}
+        onClick={() => {
+          setError('');
+          setJoinMode(false);
+        }}
+      >
+        Host a game
+      </button>
+    </div>
+  );
+
   const form = joinMode ? (
     <Form className="lobby-form" onSubmit={(e) => handleSubmit(e)}>
-      <h3>Join a game</h3>
+      {modeTabs}
       <Form.Group controlId="room">
         <Form.Label>Room code</Form.Label>
         <Form.Control
@@ -157,22 +187,10 @@ export default function Lobby({ setAuth }) {
       <button type="submit" disabled={loading}>
         {loading ? 'Joining...' : 'Join'}
       </button>
-      <div className="switcher">
-        Hosting a game?{' '}
-        <button
-          className="inline"
-          onClick={() => {
-            setError('');
-            setJoinMode(false);
-          }}
-        >
-          Create room
-        </button>
-      </div>
     </Form>
   ) : (
     <Form className="lobby-form" onSubmit={(e) => handleSubmit(e)}>
-      <h3>Host a game</h3>
+      {modeTabs}
       <Form.Group controlId="name">
         <Form.Label>Your name</Form.Label>
         <Form.Control
@@ -188,38 +206,35 @@ export default function Lobby({ setAuth }) {
       <button type="submit" disabled={loading}>
         {loading ? 'Creating...' : 'Host'}
       </button>
-      <div className="switcher">
-        Joining a game?{' '}
-        <button
-          className="inline"
-          onClick={() => {
-            setError('');
-            setJoinMode(true);
-          }}
-        >
-          Enter room
-        </button>
-      </div>
     </Form>
   );
 
   const touts = (
     <div className="touts">
-      <div>
-        <h4>Simple multiplayer buzzer system</h4>
-        <p>Host a room and invite up to 200 people to join</p>
+      <div className="tout">
+        <AiOutlineTeam className="tout-icon" />
+        <div>
+          <h4>Simple multiplayer buzzer system</h4>
+          <p>Host a room and invite up to 200 people to join</p>
+        </div>
       </div>
-      <div>
-        <h4>Join on any device</h4>
-        <p>
-          Use your computer, smartphone, or tablet to join and start buzzing
-        </p>
+      <div className="tout">
+        <AiOutlineMobile className="tout-icon" />
+        <div>
+          <h4>Join on any device</h4>
+          <p>
+            Use your computer, smartphone, or tablet to join and start buzzing
+          </p>
+        </div>
       </div>
-      <div>
-        <h4>Free to use</h4>
-        <p>
-          Perfect for online quiz bowl, trivia night, or a classroom activity
-        </p>
+      <div className="tout">
+        <AiOutlineHeart className="tout-icon" />
+        <div>
+          <h4>Free to use</h4>
+          <p>
+            Perfect for online quiz bowl, trivia night, or a classroom activity
+          </p>
+        </div>
       </div>
     </div>
   );

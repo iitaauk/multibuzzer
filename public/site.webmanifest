@@ -1,6 +1,6 @@
 {
-    "name": "Multibuzzer",
-    "short_name": "Multibuzzer",
+    "name": "Buzzer",
+    "short_name": "Buzzer",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",

@@ -1,10 +1,13 @@
 :root {
   --backgroundColor: #282c35;
   --lightBackgroundColor: #343a48;
+  --cardBackgroundColor: #2f333e;
   --redColor: #d0021b;
   --lightRedColor: #e36776;
   --yellowColor: #fff3c8;
   --greenColor: #a7ff91;
+  --successColor: #35d488;
+  --successHoverColor: #2bb673;
   --lightBlueColor: #aed1fb;
   --hoverBlueColor: #4898f6;
   --brightBlueColor: #348df5;
@@ -14,6 +17,10 @@
   --paragraphColor: #b4b4b4;
   --darkBlueColor: #2c313e;
   --disabledBlueColor: #1a477b;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 html,
@@ -23,12 +30,16 @@ body {
 
 .App {
   color: white;
-  font-family: 'Inter', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .App main {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   flex-direction: column;
 }
 
@@ -38,7 +49,10 @@ body {
 }
 
 .App header nav {
-  min-height: 60px;
+  min-height: 56px;
+  padding-top: calc(0.5rem + var(--safe-top));
+  padding-left: calc(1rem + var(--safe-left));
+  padding-right: calc(1rem + var(--safe-right));
 }
 
 .App header .navbar-brand {
@@ -58,12 +72,33 @@ body {
   justify-content: space-between;
 }
 
-.App header svg {
-  margin-right: 10px;
+.App header .navbar-brand svg {
+  margin-right: 8px;
+  font-size: 1.3rem;
 }
 
-.App header .nav-buttons > :not(:first-child) {
-  margin-left: 5px;
+.App header .nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.App .icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: var(--dimTextColor);
+  font-size: 1.35rem;
+}
+
+.App .icon-button:hover {
+  color: white;
+  background-color: var(--lightBackgroundColor);
 }
 
 /* BUTTON */
@@ -73,8 +108,11 @@ body {
   font-weight: 700;
   color: white;
   padding: 8px 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   border: solid 1px white;
+  touch-action: manipulation;
+  transition: transform 100ms ease, background-color 150ms ease,
+    border-color 150ms ease;
 }
 
 .App button:disabled {
@@ -86,6 +124,10 @@ body {
   background-color: var(--lightBackgroundColor);
 }
 
+.App button:active:enabled {
+  transform: scale(0.97);
+}
+
 .App button:focus:enabled {
   outline: none;
 }
@@ -94,6 +136,7 @@ body {
   font-weight: 500;
   color: var(--dimTextColor);
   border: none;
+  padding: 8px 10px;
 }
 
 .App button.text-button:hover {
@@ -103,7 +146,7 @@ body {
 /* FOOTER */
 .App footer {
   background-color: var(--backgroundColor);
-  padding: 30px 0;
+  padding: 30px 0 calc(30px + var(--safe-bottom));
   color: var(--paragraphColor);
   text-align: center;
   margin-top: 40px;
@@ -167,8 +210,10 @@ body {
 }
 
 .App #lobby .container-mobile {
-  margin-top: 40px;
-  padding: 0 30px;
+  margin-top: calc(24px + var(--safe-top));
+  padding: 0 24px;
+  padding-left: calc(24px + var(--safe-left));
+  padding-right: calc(24px + var(--safe-right));
   max-width: 400px;
 }
 
@@ -179,32 +224,100 @@ body {
 }
 
 .App .touts > :not(:first-child) {
-  margin-top: 40px;
+  margin-top: 32px;
+}
+
+.App .touts .tout {
+  display: flex;
+  align-items: flex-start;
+  text-align: left;
+  gap: 16px;
+}
+
+.App .touts .tout-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  border-radius: 50%;
+  background-color: var(--activeColor);
+  color: var(--lightBlueColor);
+  box-sizing: border-box;
 }
 
 .App .touts h4 {
-  font-weight: 500;
-  font-size: 1.2rem;
+  font-weight: 600;
+  font-size: 1.1rem;
   line-height: 140%;
+  margin-bottom: 4px;
 }
 
 .App .touts p {
   color: var(--paragraphColor);
   line-height: 140%;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  margin-bottom: 0;
 }
 
-.App .lobby-form h3 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
+.App .mode-tabs {
+  display: flex;
+  background-color: var(--lightBackgroundColor);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 1.75rem;
+}
+
+.App .mode-tabs button {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--dimTextColor);
+}
+
+.App .mode-tabs button.active {
+  background-color: var(--activeColor);
+  color: white;
 }
 
 .App .lobby-form .form-group:not(:first-of-type) {
-  margin-top: 2rem;
+  margin-top: 1.75rem;
+}
+
+.App .lobby-form label {
+  color: var(--dimTextColor);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.App .lobby-form .form-control {
+  background-color: var(--lightBackgroundColor);
+  border: 1px solid var(--activeColor);
+  color: white;
+  padding: 14px 16px;
+  height: auto;
+  font-size: 1.1rem;
+  border-radius: 10px;
+}
+
+.App .lobby-form .form-control:focus {
+  background-color: var(--lightBackgroundColor);
+  border-color: var(--brightBlueColor);
+  color: white;
+  box-shadow: 0 0 0 3px rgba(52, 141, 245, 0.25);
+}
+
+.App .lobby-form #room {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  text-align: center;
 }
 
 .App .lobby-form .error-message {
-  height: 1rem;
+  min-height: 1.25rem;
   font-size: 0.9rem;
   color: var(--lightRedColor);
   font-weight: 500;
@@ -215,36 +328,24 @@ body {
   width: 100%;
   background-color: var(--brightBlueColor);
   border: none;
+  border-radius: 12px;
   margin-top: 1rem;
-  padding: 12px 15px;
+  padding: 15px;
+  font-size: 1.05rem;
+  box-shadow: 0 6px 16px rgba(52, 141, 245, 0.3);
 }
 
 .App .lobby-form button[type='submit']:hover {
   background-color: var(--hoverBlueColor);
 }
 
+.App .lobby-form button[type='submit']:active:enabled {
+  transform: scale(0.98);
+}
+
 .App .lobby-form button[type='submit']:disabled {
   background-color: var(--disabledBlueColor);
-}
-
-.App .lobby-form button.inline {
-  background: none;
-  border: none;
-  padding: 0;
-  font-weight: 500;
-  display: inline-block;
-  color: var(--lightBlueColor);
-  width: auto;
-}
-
-.App .lobby-form .switcher {
-  text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-}
-
-.App .lobby-form button.inline:hover {
-  opacity: 0.5;
+  box-shadow: none;
 }
 
 /* GAME */
@@ -255,62 +356,169 @@ body {
 
 .App #game .container {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 12px;
+  padding-left: calc(15px + var(--safe-left));
+  padding-right: calc(15px + var(--safe-right));
+  padding-bottom: calc(24px + var(--safe-bottom));
 }
 
 .App #room-title {
   margin-bottom: 0px;
+  color: var(--dimTextColor);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .App .warning {
   color: var(--lightRedColor);
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .App #buzzer {
-  margin-top: 20px;
+  --buzzSize: clamp(180px, 58vw, 280px);
+
+  position: relative;
+  margin-top: 18px;
+  padding-bottom: 40px;
   display: flex;
   flex-direction: row;
   justify-content: center;
 }
 
-.App #buzzer > button {
-  width: 300px;
-  height: 300px;
+/* The base/stand the dome is mounted on - visibly wider than the dome so
+   it peeks out on all sides, like a mushroom-cap arcade button. This is
+   what actually reads as "physical object", more than any shadow trick on
+   the dome itself does. */
+.App #buzzer::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--buzzSize) + 34px);
+  height: 52px;
+  border-radius: 50% / 40%;
+  background: linear-gradient(180deg, #363c49 0%, #1b1e26 65%, #101216 100%);
+  box-shadow: 0 3px 0 rgba(255, 255, 255, 0.05) inset,
+    0 16px 22px rgba(0, 0, 0, 0.55);
+  transition: transform 90ms ease;
+}
+
+/* Contact shadow on the "table" the whole assembly sits on. */
+.App #buzzer::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--buzzSize) + 10px);
+  height: 18px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0) 72%
+  );
   border-radius: 50%;
-  background-color: var(--brightBlueColor);
+  transition: opacity 90ms ease;
+}
+
+.App #buzzer > button {
+  --buzzHighlight: #ffffff;
+  --buzzMain: var(--brightBlueColor);
+  --buzzShade: #1a4f91;
+  --buzzRim: #0e3564;
+
+  position: relative;
+  z-index: 1;
+  width: var(--buzzSize);
+  height: var(--buzzSize);
+  border-radius: 50%;
   color: white;
   border: none;
-  font-weight: 700;
-  font-size: 2rem;
+  font-weight: 800;
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   user-select: none;
+  background: radial-gradient(
+    circle at 32% 24%,
+    var(--buzzHighlight) 0%,
+    var(--buzzMain) 20%,
+    var(--buzzMain) 55%,
+    var(--buzzShade) 100%
+  );
+  /* A tight, bright gloss spot up top (short stop on the highlight above)
+     plus a beveled rim ring is what sells "glossy plastic dome" rather
+     than "flat circle with a gradient". The drop shadow keeps the dome
+     looking lifted above its base. */
+  box-shadow: inset 0 0 0 5px var(--buzzRim),
+    inset 0 14px 20px rgba(255, 255, 255, 0.35),
+    inset 0 -26px 30px rgba(0, 0, 0, 0.3), 0 22px 26px rgba(0, 0, 0, 0.5);
+  transform: translateY(-14px);
+  transition: transform 110ms ease, box-shadow 110ms ease,
+    background 150ms ease;
 }
 
-.App #buzzer > button:hover {
-  background-color: var(--hoverBlueColor);
+.App #buzzer > button:hover:enabled {
+  filter: brightness(1.06);
 }
 
-.App #buzzer > button:active {
-  background-color: var(--darkBlueColor);
+.App #buzzer > button:active:enabled,
+.App #buzzer > button.buzzed {
+  transform: translateY(-2px) scale(0.985);
+  box-shadow: inset 0 0 0 5px var(--buzzRim),
+    inset 0 6px 10px rgba(255, 255, 255, 0.25),
+    inset 0 -14px 18px rgba(0, 0, 0, 0.32), 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-.App #buzzer > button:disabled {
-  background-color: var(--lightBackgroundColor);
+.App #buzzer:has(> button:active:enabled)::before,
+.App #buzzer:has(> button.buzzed)::before {
+  transform: translateX(-50%) scaleY(0.85);
 }
 
-@media screen and (max-width: 767px) {
-  .App #buzzer > button {
-    max-width: 200px;
-    max-height: 200px;
-  }
+.App #buzzer:has(> button:active:enabled)::after,
+.App #buzzer:has(> button.buzzed)::after {
+  opacity: 0.5;
+}
+
+.App #buzzer > button.buzzed {
+  --buzzHighlight: #ffffff;
+  --buzzMain: var(--successColor);
+  --buzzShade: #0f7a4f;
+  --buzzRim: #084d31;
+}
+
+.App #buzzer > button.locked {
+  --buzzHighlight: #7a8090;
+  --buzzMain: var(--lightBackgroundColor);
+  --buzzShade: #1c1f26;
+  --buzzRim: #0e1013;
+  transform: translateY(-2px) scale(0.99);
+  color: var(--disabledTextColor);
+  text-shadow: none;
 }
 
 .App .settings {
-  margin-top: 30px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
-.App .settings > .button-container:not(:first-child) {
-  margin-top: 10px;
+.App .settings .button-container {
+  width: 100%;
+  max-width: 280px;
+}
+
+.App .settings .button-container button {
+  width: 100%;
+  border-radius: 10px;
+  padding: 10px 15px;
 }
 
 .App .settings button:hover:disabled {
@@ -318,8 +526,8 @@ body {
 }
 
 .App .settings .divider {
-  margin: 40px auto;
-  width: 50%;
+  margin: 32px auto 8px;
+  width: 60%;
 }
 
 .App #reset {
@@ -327,11 +535,28 @@ body {
 }
 
 .App .queue {
-  margin-top: 40px;
+  margin-top: 32px;
+  text-align: left;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.App .queue p {
-  margin-bottom: 0;
+.App .queue > p {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dimTextColor);
+  text-align: center;
+}
+
+.App .queue .empty-state {
+  text-align: center;
+  color: var(--disabledTextColor);
+  font-size: 0.95rem;
+  padding: 10px 0 4px;
 }
 
 .App .queue ul {
@@ -340,37 +565,82 @@ body {
 }
 
 .App .queue li {
-  font-size: 1.5rem;
+  margin-bottom: 8px;
 }
 
-.App .queue li .player-sign {
-  display: inline-block;
-  min-width: 150px;
-  padding: 5px 15px;
-  border-radius: 4px;
-  transition: all ease-in-out 0.1s;
+.App .queue li .player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background-color: var(--cardBackgroundColor);
+  border-radius: 12px;
+  padding: 4px 8px 4px 4px;
+  transition: background-color 0.1s ease-in-out;
+}
+
+.App .queue li.resettable .player-row {
+  cursor: pointer;
+}
+
+.App .queue li.resettable .player-row:hover {
+  background-color: var(--lightBackgroundColor);
+}
+
+.App .queue .player-sign {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 12px;
+  padding: 8px;
+}
+
+.App .queue .rank {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--activeColor);
+  color: var(--dimTextColor);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.App .queue li:first-child .rank {
+  background-color: var(--successColor);
+  color: var(--backgroundColor);
+}
+
+.App .queue .player-info {
+  min-width: 0;
+  text-align: left;
 }
 
 .App .queue li .name {
   font-weight: 600;
-}
-
-.App .queue li.resettable .player-sign {
-  cursor: pointer;
-}
-
-.App .queue li.resettable .player-sign:hover {
-  background-color: var(--lightBackgroundColor);
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .App .queue .disconnected {
-  margin-left: 5px;
   color: var(--redColor);
   opacity: 1;
+  flex: none;
 }
 
 .App .mini {
-  font-size: 1rem;
+  font-size: 0.85rem;
+  color: var(--dimTextColor);
+  margin-top: 2px;
 }
 
 .App .tiny {
@@ -439,21 +709,21 @@ body {
 
 /* PLAYER ROW & KICK BUTTON */
 .App .player-row {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
 }
 
 .App .kick-button {
+  flex: none;
   background: none;
   border: 1px solid var(--redColor);
   color: var(--lightRedColor);
   font-size: 0.8rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 10px;
+  font-weight: 600;
+  padding: 10px 14px;
+  min-height: 40px;
+  border-radius: 8px;
+  margin-left: 8px;
   cursor: pointer;
-  vertical-align: middle;
   transition: all 0.1s ease-in-out;
 }
 
@@ -461,4 +731,3 @@ body {
   background-color: var(--redColor);
   color: white;
 }
-

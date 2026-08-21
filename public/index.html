@@ -7,7 +7,7 @@
       name="description"
       content="Multiplayer buzzer system for quiz bowl"
     />
-    <meta property="og:title" content="Multibuzzer" />
+    <meta property="og:title" content="Buzzer" />
     <meta property="og:url" content="https://www.multibuzz.app" />
     <meta property="og:image" content="%PUBLIC_URL%/social.png" />
     <meta property="og:type" content="website" />
@@ -17,7 +17,7 @@
     />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content="%PUBLIC_URL%/twitter.png" />
-    <meta name="twitter:title" content="Multibuzzer" />
+    <meta name="twitter:title" content="Buzzer" />
     <meta
       name="twitter:description"
       content="Free online multiplayer buzzer system. Perfect for trivia night, quiz bowl, classrooms, and more."
@@ -47,19 +47,24 @@
       href="%PUBLIC_URL%/safari-pinned-tab.svg"
       color="#348df5"
     />
-    <meta name="msapplication-TileColor" content="#2b5797" />
+    <meta name="msapplication-TileColor" content="#348df5" />
     <meta name="theme-color" content="#282c35" />
     <link rel="manifest" href="%PUBLIC_URL%/site.webmanifest" />
+
+    <!-- "Add to Home Screen" on iOS Safari doesn't read manifest.json for
+         these - it needs its own meta tags to get a real name (instead of
+         falling back to <title>) and to launch standalone instead of as a
+         plain Safari tab. -->
+    <meta name="apple-mobile-web-app-title" content="Buzzer" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <link
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
       integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
       crossorigin="anonymous"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap"
-      rel="stylesheet"
     />
 
     <!--
@@ -71,8 +76,8 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>Multibuzzer</title>
-    <meta name="title" content="Multibuzzer" />
+    <title>Buzzer</title>
+    <meta name="title" content="Buzzer" />
     <meta
       name="description"
       content="Free online multiplayer buzzer system. Perfect for trivia night, quiz bowl, classrooms, and more."

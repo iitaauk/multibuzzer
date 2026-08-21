@@ -36,22 +36,32 @@ describe('Lobby', () => {
   describe('host-mode vs join-mode form switching', () => {
     test('starts in join mode by default', () => {
       const { screen } = renderLobby();
-      expect(screen.getByText('Join a game')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Join a game' })).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
       expect(screen.getByLabelText('Room code')).toBeInTheDocument();
     });
 
-    test('"Create room" switches to host mode, hiding the room code field', () => {
+    test('the "Host a game" tab switches to host mode, hiding the room code field', () => {
       const { screen } = renderLobby();
-      fireEvent.click(screen.getByText('Create room'));
-      expect(screen.getByText('Host a game')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('Host a game'));
+      expect(screen.getByRole('tab', { name: 'Host a game' })).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
       expect(screen.queryByLabelText('Room code')).not.toBeInTheDocument();
     });
 
-    test('"Enter room" switches back to join mode', () => {
+    test('the "Join a game" tab switches back to join mode', () => {
       const { screen } = renderLobby();
-      fireEvent.click(screen.getByText('Create room'));
-      fireEvent.click(screen.getByText('Enter room'));
-      expect(screen.getByText('Join a game')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('Host a game'));
+      fireEvent.click(screen.getByText('Join a game'));
+      expect(screen.getByRole('tab', { name: 'Join a game' })).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
+      expect(screen.getByLabelText('Room code')).toBeInTheDocument();
     });
   });
 
@@ -79,7 +89,7 @@ describe('Lobby', () => {
 
     test('submitting host mode with no name shows the name message', () => {
       const { screen } = renderLobby();
-      fireEvent.click(screen.getByText('Create room'));
+      fireEvent.click(screen.getByText('Host a game'));
       fireEvent.click(screen.getByText('Host'));
       expect(screen.getByText('Please enter your player name')).toBeInTheDocument();
     });
@@ -148,7 +158,7 @@ describe('Lobby', () => {
       createRoom.mockResolvedValue({ status: 500, data: null });
       const { screen } = renderLobby();
 
-      fireEvent.click(screen.getByText('Create room'));
+      fireEvent.click(screen.getByText('Host a game'));
       fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Alice' } });
       fireEvent.click(screen.getByText('Host'));
 

@@ -4,7 +4,7 @@ const ratelimit = require('koa-ratelimit');
 const { randomUUID } = require('crypto');
 const { koaBody } = require('koa-body');
 
-const { Server, Origins } = require('boardgame.io/server');
+const { Server } = require('boardgame.io/server');
 const Buzzer = require('./lib/store').Buzzer;
 const { CappedInMemory } = require('./lib/db');
 
@@ -16,11 +16,22 @@ function randomString(length, chars) {
   return result;
 }
 
+// boardgame.io's own Origins.LOCALHOST_IN_DEVELOPMENT only matches literal
+// `localhost:PORT`, not a LAN IP - so `yarn dev` (client/server on separate
+// ports) is unreachable from another device on the network, e.g. testing
+// from a phone via the machine's LAN IP, even though the request succeeds
+// server-side (missing CORS headers make the browser discard the response).
+// Production is unaffected either way: client and server share one origin
+// there, so this dev-only regex is never even consulted.
+const DEV_ORIGINS =
+  /(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}):\d+/;
+const origins = process.env.NODE_ENV === 'production' ? false : DEV_ORIGINS;
+
 const server = Server({
   games: [Buzzer],
   generateCredentials: () => randomUUID(),
   uuid: () => randomString(6, 'ABCDEFGHJKLMNPQRSTUVWXYZ'),
-  origins: [Origins.LOCALHOST_IN_DEVELOPMENT],
+  origins: [origins],
   db: new CappedInMemory(),
 });
 

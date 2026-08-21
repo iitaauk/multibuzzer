@@ -29,7 +29,7 @@ describe('Header', () => {
 
     renderHeader({ auth, clearAuth });
 
-    fireEvent.click(screen.getByText('Leave game'));
+    fireEvent.click(screen.getByRole('button', { name: 'Leave game' }));
 
     await waitFor(() => expect(clearAuth).toHaveBeenCalledTimes(1));
     expect(leaveRoom).toHaveBeenCalledWith('ABCDEF', '0', 'creds-123');
@@ -43,7 +43,7 @@ describe('Header', () => {
     jest.spyOn(console, 'log').mockImplementation(() => {});
 
     renderHeader({ auth, clearAuth });
-    fireEvent.click(screen.getByText('Leave game'));
+    fireEvent.click(screen.getByRole('button', { name: 'Leave game' }));
 
     await waitFor(() => expect(clearAuth).toHaveBeenCalledTimes(1));
     console.log.mockRestore();
@@ -51,7 +51,9 @@ describe('Header', () => {
 
   test('leave button is not rendered when clearAuth is not provided', () => {
     renderHeader({ auth: { roomID: 'ABCDEF' } });
-    expect(screen.queryByText('Leave game')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Leave game' })
+    ).not.toBeInTheDocument();
   });
 
   test('sound toggle button reflects current sound state and calls setSound', () => {
@@ -61,8 +63,10 @@ describe('Header', () => {
         <Header sound={false} setSound={setSound} />
       </MemoryRouter>
     );
-    expect(screen.getByText('Turn on sound')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Turn on sound'));
+    expect(
+      screen.getByRole('button', { name: 'Turn on sound' })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Turn on sound' }));
     expect(setSound).toHaveBeenCalledTimes(1);
 
     rerender(
@@ -70,24 +74,32 @@ describe('Header', () => {
         <Header sound={true} setSound={setSound} />
       </MemoryRouter>
     );
-    expect(screen.getByText('Turn off sound')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Turn off sound' })
+    ).toBeInTheDocument();
   });
 
   test('sound toggle button is absent when sound is null (default)', () => {
     renderHeader();
-    expect(screen.queryByText(/turn (on|off) sound/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /turn (on|off) sound/i })
+    ).not.toBeInTheDocument();
   });
 
   test('"Show Room QR" is only rendered for the host with a roomID', () => {
     const { rerender } = renderHeader({ isHost: false, auth: { roomID: 'ABCDEF' } });
-    expect(screen.queryByText('Show Room QR')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Show Room QR' })
+    ).not.toBeInTheDocument();
 
     rerender(
       <MemoryRouter>
         <Header isHost auth={{ roomID: 'ABCDEF' }} />
       </MemoryRouter>
     );
-    expect(screen.getByText('Show Room QR')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Show Room QR' })
+    ).toBeInTheDocument();
   });
 
   test('QR modal opens on click and can be closed', async () => {
@@ -95,7 +107,7 @@ describe('Header', () => {
 
     expect(screen.queryByText('Room QR Code')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Show Room QR'));
+    fireEvent.click(screen.getByRole('button', { name: 'Show Room QR' }));
     expect(screen.getByText('Room QR Code')).toBeInTheDocument();
     expect(screen.getByText('ABCDEF')).toBeInTheDocument();
     expect(screen.getByText('http://localhost/ABCDEF')).toBeInTheDocument();
