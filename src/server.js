@@ -37,16 +37,24 @@ app.use(
 );
 
 // rate limiter
+// Overridable so integration tests can run many requests without tripping
+// this - production behavior (25 req/min) is unchanged unless these env
+// vars are explicitly set.
+const RATE_LIMIT_MAX = process.env.RATE_LIMIT_MAX
+  ? Number(process.env.RATE_LIMIT_MAX)
+  : 25;
+const RATE_LIMIT_DURATION_MS = process.env.RATE_LIMIT_DURATION_MS
+  ? Number(process.env.RATE_LIMIT_DURATION_MS)
+  : 60000;
 const db = new Map();
 app.use(
   ratelimit({
     driver: 'memory',
     db: db,
-    // 1 min window
-    duration: 60000,
+    duration: RATE_LIMIT_DURATION_MS,
     errorMessage: 'Too many requests',
     id: (ctx) => ctx.ip,
-    max: 25,
+    max: RATE_LIMIT_MAX,
     whitelist: (ctx) => {
       return !ctx.path.includes(`games/${Buzzer.name}`);
     },
@@ -367,8 +375,13 @@ app.use(async (ctx, next) => {
 
 const roomLifetimes = new Map();
 
-function startRoomCleanupCron(serverInstance, intervalMs = 60000) {
-  setInterval(() => {
+function startRoomCleanupCron(
+  serverInstance,
+  intervalMs = 60000,
+  maxAgeMs = 6 * 60 * 60 * 1000, // 6 hours
+  maxIdleMs = 1 * 60 * 60 * 1000 // 1 hour
+) {
+  const interval = setInterval(() => {
     try {
       const gameIDs = serverInstance.db.listMatches({ gameName: Buzzer.name });
       const now = Date.now();
@@ -407,9 +420,6 @@ function startRoomCleanupCron(serverInstance, intervalMs = 60000) {
         const ageMs = now - tracking.createdAt;
         const idleMs = now - tracking.lastActivityAt;
 
-        const maxAgeMs = 6 * 60 * 60 * 1000; // 6 hours
-        const maxIdleMs = 1 * 60 * 60 * 1000; // 1 hour
-
         if (ageMs >= maxAgeMs || idleMs >= maxIdleMs) {
           console.log(
             `[CRON] Wiping room ${gameID}. Age: ${Math.round(
@@ -424,6 +434,7 @@ function startRoomCleanupCron(serverInstance, intervalMs = 60000) {
       console.error('[CRON] Error during room cleanup:', err);
     }
   }, intervalMs);
+  return interval;
 }
 
 function scheduleDailyRestart() {
@@ -459,17 +470,13 @@ function scheduleDailyRestart() {
   }, msToNext3AM);
 }
 
-server.run(
-  {
-    port: PORT,
-  },
-  () => {
-    // Start the room cleanup cron
-    startRoomCleanupCron(server);
-
-    // Start the daily restart scheduler
-    scheduleDailyRestart();
-
+// Starts listening and wires up the active-connections tracker + SPA
+// fallback. Exported (rather than run unconditionally below) so tests can
+// require() this module, boot it on their own port, and tear it down with
+// server.kill(...) between test files - without that, every integration
+// test would need its own live yarn dev process running first.
+async function startServer(port, onReady) {
+  const servers = await server.run({ port }, () => {
     // Set up our active connections tracker
     const io = server.app._io;
     if (io) {
@@ -496,5 +503,20 @@ server.run(
         next
       );
     });
-  }
-);
+
+    if (onReady) {
+      onReady();
+    }
+  });
+  return servers;
+}
+
+/* istanbul ignore next -- exercised via `node src/server.js`, not under test */
+if (require.main === module) {
+  startServer(PORT, () => {
+    startRoomCleanupCron(server);
+    scheduleDailyRestart();
+  });
+}
+
+module.exports = { server, startServer, startRoomCleanupCron, roomLifetimes };
