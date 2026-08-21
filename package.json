@@ -1,6 +1,6 @@
 {
   "name": "multibuzzer",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "author": "iamwillsun@gmail.com",
   "license": "MIT",
   "repository": "https://github.com/wsun/multibuzzer",
@@ -10,8 +10,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "concurrently \"PORT=4000 yarn client\" \"PORT=4001 yarn start\"",
-    "client": "react-scripts start",
-    "build": "react-scripts build",
+    "client": "REACT_APP_VERSION=$npm_package_version react-scripts start",
+    "build": "REACT_APP_VERSION=$npm_package_version react-scripts build",
     "test": "react-scripts test",
     "test:integration": "jest --config jest.integration.config.js --forceExit",
     "test:all": "yarn test:integration && CI=true yarn test",

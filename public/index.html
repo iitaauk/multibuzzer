@@ -28,35 +28,37 @@
          other icons) very aggressively, keyed to the exact URL - a plain
          Clear-History-and-Website-Data pass does not reliably bust it, nor
          does redeploying the same filename with new bytes. The ?v= query
-         string is the actual fix: bump it whenever the icon artwork
-         changes, so the URL itself changes and Safari is forced to treat
-         it as a new resource instead of reusing whatever it cached before. -->
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico?v=2" />
+         string is the actual fix: it's tied to package.json's version
+         (REACT_APP_VERSION, set by the build/client npm scripts), so any
+         version bump automatically busts these regardless of whether that
+         release actually touched the icon files - no separate counter to
+         remember to bump. -->
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico?v=%REACT_APP_VERSION%" />
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="%PUBLIC_URL%/apple-touch-icon.png?v=2"
+      href="%PUBLIC_URL%/apple-touch-icon.png?v=%REACT_APP_VERSION%"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="32x32"
-      href="%PUBLIC_URL%/favicon-32x32.png?v=2"
+      href="%PUBLIC_URL%/favicon-32x32.png?v=%REACT_APP_VERSION%"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="16x16"
-      href="%PUBLIC_URL%/favicon-16x16.png?v=2"
+      href="%PUBLIC_URL%/favicon-16x16.png?v=%REACT_APP_VERSION%"
     />
     <link
       rel="mask-icon"
-      href="%PUBLIC_URL%/safari-pinned-tab.svg?v=2"
+      href="%PUBLIC_URL%/safari-pinned-tab.svg?v=%REACT_APP_VERSION%"
       color="#348df5"
     />
     <meta name="msapplication-TileColor" content="#348df5" />
     <meta name="theme-color" content="#282c35" />
-    <link rel="manifest" href="%PUBLIC_URL%/site.webmanifest?v=2" />
+    <link rel="manifest" href="%PUBLIC_URL%/site.webmanifest?v=%REACT_APP_VERSION%" />
 
     <!-- "Add to Home Screen" on iOS Safari doesn't read manifest.json for
          these - it needs its own meta tags to get a real name (instead of
