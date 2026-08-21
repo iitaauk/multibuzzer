@@ -88,8 +88,8 @@ export default function Table(game) {
 
   // check if kicked out of room
   useEffect(() => {
-    if (loaded && game.gameMetadata && game.playerID) {
-      const myMeta = game.gameMetadata.find(
+    if (loaded && game.matchData && game.playerID) {
+      const myMeta = game.matchData.find(
         (p) => String(p.id) === String(game.playerID)
       );
       if (!myMeta || !myMeta.name) {
@@ -101,15 +101,15 @@ export default function Table(game) {
         alert('You have been kicked from the room.');
       }
     }
-  }, [loaded, game.gameMetadata, game.playerID, game.headerData]);
+  }, [loaded, game.matchData, game.playerID, game.headerData]);
 
   // check if kicked out of room when disconnected
   useEffect(() => {
     let interval;
-    if (!game.isConnected && game.playerID && game.gameID) {
+    if (!game.isConnected && game.playerID && game.matchID) {
       const checkKicked = async () => {
         try {
-          const res = await getRoom(game.gameID);
+          const res = await getRoom(game.matchID);
           if (res.status === 200) {
             const room = res.data;
             const myMeta = room.players.find(
@@ -135,17 +135,17 @@ export default function Table(game) {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [game.isConnected, game.playerID, game.gameID, game.headerData]);
+  }, [game.isConnected, game.playerID, game.matchID, game.headerData]);
 
   const handleKick = async (idToKick) => {
     const playerToKick =
-      game.gameMetadata &&
-      game.gameMetadata.find((p) => String(p.id) === String(idToKick));
+      game.matchData &&
+      game.matchData.find((p) => String(p.id) === String(idToKick));
     const nameToKick = playerToKick ? playerToKick.name : 'this player';
     if (window.confirm(`Are you sure you want to kick ${nameToKick}?`)) {
       try {
         const response = await kickPlayer(
-          game.gameID,
+          game.matchID,
           idToKick,
           game.playerID,
           game.headerData.credentials
@@ -160,11 +160,15 @@ export default function Table(game) {
     }
   };
 
-  const players = !game.gameMetadata
+  const players = !game.matchData
     ? []
-    : game.gameMetadata
+    : game.matchData
         .filter((p) => p.name)
-        .map((p) => ({ ...p, id: String(p.id) }));
+        .map((p) => ({
+          ...p,
+          id: String(p.id),
+          connected: !!p.isConnected,
+        }));
   // host is lowest active user
   const firstPlayer =
     get(
@@ -218,7 +222,7 @@ export default function Table(game) {
       />
       <Container>
         <section>
-          <p id="room-title">Room {game.gameID}</p>
+          <p id="room-title">Room {game.matchID}</p>
           {!game.isConnected ? (
             <p className="warning">Disconnected - attempting to reconnect...</p>
           ) : null}

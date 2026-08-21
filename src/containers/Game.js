@@ -43,7 +43,7 @@ export default function Game({ auth, setAuth }) {
     <main id="game">
       <div className="primary">
         <App
-          gameID={roomID}
+          matchID={roomID}
           playerID={String(auth.playerID)}
           credentials={auth.credentials}
           headerData={{ ...auth, setAuth }}

@@ -73,6 +73,16 @@ export async function joinRoom(roomID, playerID, playerName) {
   });
 }
 
+export async function reclaimRoom(roomID, playerID, playerName) {
+  return request(`${LOBBY_SERVER}/games/${Buzzer.name}/${roomID}/reclaim`, {
+    method: 'POST',
+    body: JSON.stringify({
+      playerID,
+      playerName,
+    }),
+  });
+}
+
 export async function leaveRoom(roomID, playerID, credentials) {
   return request(`${LOBBY_SERVER}/games/${Buzzer.name}/${roomID}/leave`, {
     method: 'POST',

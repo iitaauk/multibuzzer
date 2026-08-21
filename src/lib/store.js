@@ -1,20 +1,24 @@
 const { ActivePlayers } = require('boardgame.io/core');
 
-function resetBuzzers(G) {
+// All moves ignore stale stateID: many players can buzz within the same
+// server tick, and rejecting a move whose client-side state has been
+// superseded by another player's buzz would silently drop it instead of
+// queuing it.
+function resetBuzzers({ G }) {
   G.queue = {};
 }
 
-function resetBuzzer(G, ctx, id) {
+function resetBuzzer({ G }, id) {
   const newQueue = { ...G.queue };
   delete newQueue[id];
   G.queue = newQueue;
 }
 
-function toggleLock(G) {
+function toggleLock({ G }) {
   G.locked = !G.locked;
 }
 
-function buzz(G, ctx, id) {
+function buzz({ G }, id) {
   const newQueue = {
     ...G.queue,
   };
@@ -33,7 +37,12 @@ const Buzzer = {
   phases: {
     play: {
       start: true,
-      moves: { buzz, resetBuzzer, resetBuzzers, toggleLock },
+      moves: {
+        buzz: { move: buzz, ignoreStaleStateID: true },
+        resetBuzzer: { move: resetBuzzer, ignoreStaleStateID: true },
+        resetBuzzers: { move: resetBuzzers, ignoreStaleStateID: true },
+        toggleLock: { move: toggleLock, ignoreStaleStateID: true },
+      },
       turn: {
         activePlayers: ActivePlayers.ALL,
       },

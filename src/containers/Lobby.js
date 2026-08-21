@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Form } from 'react-bootstrap';
 import { useLocation, useHistory } from 'react-router-dom';
 import { get } from 'lodash';
-import { joinRoom, getRoom, createRoom } from '../lib/endpoints';
+import { joinRoom, reclaimRoom, getRoom, createRoom } from '../lib/endpoints';
 import Header from '../components/Header';
 import Footer, { FooterSimple } from '../components/Footer';
 
@@ -53,14 +53,18 @@ export default function Lobby({ setAuth }) {
       const playerSeat = room.players.find((player) => player.name === name);
       const freeSeat = room.players.find((player) => !player.name);
 
-      if (playerSeat && playerSeat.connected) {
+      if (playerSeat && playerSeat.isConnected) {
         throw new Error(ERROR_TYPE.dupName);
       }
       if (!playerSeat && !freeSeat) {
         throw new Error(ERROR_TYPE.fullRoom);
       }
       const playerID = get(playerSeat, 'id', get(freeSeat, 'id'));
-      const joinRes = await joinRoom(room.roomID, playerID, name);
+      // a seat with our name that's currently disconnected is ours to
+      // reclaim; an empty seat is joined the normal way
+      const joinRes = playerSeat
+        ? await reclaimRoom(room.matchID, playerID, name)
+        : await joinRoom(room.matchID, playerID, name);
       if (joinRes.status !== 200) {
         throw new Error(ERROR_TYPE.roomCode);
       }
@@ -68,13 +72,13 @@ export default function Lobby({ setAuth }) {
       const auth = {
         playerID,
         credentials: creds.playerCredentials,
-        roomID: room.roomID,
+        roomID: room.matchID,
       };
 
       // save auth and go to room
       setAuth(auth);
       setLoading(false);
-      history.push(`/${room.roomID}`);
+      history.push(`/${room.matchID}`);
     } catch (error) {
       setLoading(false);
       setError(ERROR_MESSAGE[error.message]);
@@ -89,7 +93,7 @@ export default function Lobby({ setAuth }) {
       if (createRes.status !== 200) {
         throw new Error(ERROR_TYPE.hostRoom);
       }
-      const roomID = createRes.data.gameID;
+      const roomID = createRes.data.matchID;
       await enterRoom(roomID, true);
     } catch (error) {
       setLoading(false);

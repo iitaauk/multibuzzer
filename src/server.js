@@ -4,9 +4,25 @@ const ratelimit = require('koa-ratelimit');
 const { v4: uuidv4 } = require('uuid');
 const { koaBody } = require('koa-body');
 
-const Server = require('boardgame.io/server').Server;
+const { Server, Origins } = require('boardgame.io/server');
 const Buzzer = require('./lib/store').Buzzer;
-const server = Server({ games: [Buzzer], generateCredentials: () => uuidv4() });
+const { CappedInMemory } = require('./lib/db');
+
+function randomString(length, chars) {
+  let result = '';
+  // eslint-disable-next-line no-plusplus
+  for (let i = length; i > 0; --i)
+    result += chars[Math.floor(Math.random() * chars.length)];
+  return result;
+}
+
+const server = Server({
+  games: [Buzzer],
+  generateCredentials: () => uuidv4(),
+  uuid: () => randomString(6, 'ABCDEFGHJKLMNPQRSTUVWXYZ'),
+  origins: [Origins.LOCALHOST_IN_DEVELOPMENT],
+  db: new CappedInMemory(),
+});
 
 const PORT = process.env.PORT || 4001;
 const { app } = server;
@@ -19,14 +35,6 @@ app.use(
     },
   })
 );
-
-function randomString(length, chars) {
-  let result = '';
-  // eslint-disable-next-line no-plusplus
-  for (let i = length; i > 0; --i)
-    result += chars[Math.floor(Math.random() * chars.length)];
-  return result;
-}
 
 // rate limiter
 const db = new Map();
@@ -97,7 +105,7 @@ app.use(async (ctx, next) => {
 
         // Verify if hostPlayerID is the actual host (lowest registered player ID with a name who is currently connected)
         const registeredPlayers = Object.entries(metadata.players)
-          .filter(([id, p]) => p.name && p.connected)
+          .filter(([id, p]) => p.name && p.isConnected)
           .map(([id, p]) => ({ ...p, id: parseInt(id, 10) }));
 
         const sortedPlayers = registeredPlayers.sort((a, b) => a.id - b.id);
@@ -132,7 +140,9 @@ app.use(async (ctx, next) => {
           if (state.G && state.G.queue && state.G.queue[playerID]) {
             const newQueue = { ...state.G.queue };
             delete newQueue[playerID];
-            state.G.queue = newQueue;
+            // state.G is frozen by boardgame.io's Immer-based reducer once any
+            // move has run, so it must be replaced rather than mutated in place.
+            state.G = { ...state.G, queue: newQueue };
             await server.db.setState(gameID, state);
           }
         }
@@ -155,7 +165,7 @@ app.use(async (ctx, next) => {
           const filteredMetadata = Object.values(metadata.players).map((p) => ({
             id: p.id,
             name: p.name,
-            connected: p.connected || false,
+            isConnected: p.isConnected || false,
           }));
           for (const info of activeSockets.values()) {
             if (info.gameID === gameID && String(info.playerID) !== String(playerID)) {
@@ -188,12 +198,84 @@ app.use(async (ctx, next) => {
   await next();
 });
 
+// Reclaiming a seat: boardgame.io's own /join route refuses to hand out a
+// seat that already has a name attached (409), which is correct for a seat
+// that's still in use but blocks the app's own reconnect-by-name flow after
+// a dropped socket. This route lets a disconnected seat be re-claimed by
+// whoever knows the room code and that player's display name, by rotating
+// in fresh credentials for the same seat.
+app.use(async (ctx, next) => {
+  const match = ctx.path.match(/^\/games\/buzzer\/([^\/]+)\/reclaim$/i);
+  if (match) {
+    ctx.set('Access-Control-Allow-Origin', '*');
+    ctx.set(
+      'Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept'
+    );
+    ctx.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+
+    if (ctx.method === 'OPTIONS') {
+      ctx.status = 204;
+      return;
+    }
+
+    if (ctx.method === 'POST') {
+      await parseBody(ctx, async () => {});
+      const gameID = match[1].toUpperCase();
+      const { playerID, playerName } = ctx.request.body;
+
+      try {
+        const fetchResult = await server.db.fetch(gameID, { metadata: true });
+        const metadata = fetchResult ? fetchResult.metadata : null;
+
+        if (!metadata) {
+          ctx.status = 404;
+          ctx.body = { error: `Game ${gameID} not found` };
+          return;
+        }
+
+        const seat = metadata.players[playerID];
+        if (!seat || !seat.name) {
+          ctx.status = 404;
+          ctx.body = { error: `Player ${playerID} not found in this room` };
+          return;
+        }
+
+        if (seat.name !== playerName) {
+          ctx.status = 409;
+          ctx.body = { error: 'Seat does not belong to this player name' };
+          return;
+        }
+
+        if (seat.isConnected) {
+          ctx.status = 409;
+          ctx.body = { error: 'Player is already connected' };
+          return;
+        }
+
+        const playerCredentials = uuidv4();
+        seat.credentials = playerCredentials;
+        await server.db.setMetadata(gameID, metadata);
+
+        ctx.status = 200;
+        ctx.body = { playerID, playerCredentials };
+      } catch (err) {
+        console.error('Error reclaiming seat:', err);
+        ctx.status = 500;
+        ctx.body = { error: 'Internal server error' };
+      }
+      return;
+    }
+  }
+  await next();
+});
+
 const roomLifetimes = new Map();
 
 function startRoomCleanupCron(serverInstance, intervalMs = 60000) {
   setInterval(() => {
     try {
-      const gameIDs = serverInstance.db.listGames({ gameName: Buzzer.name });
+      const gameIDs = serverInstance.db.listMatches({ gameName: Buzzer.name });
       const now = Date.now();
 
       // Clean up tracked rooms that no longer exist in db
@@ -285,7 +367,6 @@ function scheduleDailyRestart() {
 server.run(
   {
     port: PORT,
-    lobbyConfig: { uuid: () => randomString(6, 'ABCDEFGHJKLMNPQRSTUVWXYZ') },
   },
   () => {
     // Start the room cleanup cron

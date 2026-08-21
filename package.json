@@ -1,6 +1,6 @@
 {
   "name": "multibuzzer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "iamwillsun@gmail.com",
   "license": "MIT",
   "repository": "https://github.com/wsun/multibuzzer",
@@ -16,21 +16,18 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "boardgame.io": "wsun/boardgame.io#master",
+    "boardgame.io": "^0.50.2",
     "koa": "^2.16.3",
     "koa-body": "^6.0.1",
     "koa-ratelimit": "^4.2.1",
     "koa-static": "^5.0.0",
-    "uuid": "^14.0.1"
+    "uuid": "^8.3.2"
   },
   "resolutions": {
     "koa": "^2.16.3",
     "semver": "^7.6.3",
     "flatted": "^3.4.2",
-    "socket.io-parser": "^3.4.4",
     "@koa/cors": "^5.0.0",
-    "uuid": "^8.3.2",
-    "parseuri": "^3.0.2",
     "debug": "^4.3.4",
     "cookie": "^0.7.1"
   },
