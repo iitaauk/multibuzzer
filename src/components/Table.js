@@ -13,9 +13,12 @@ export default function Table(game) {
   );
   const [lastBuzz, setLastBuzz] = useState(null);
   const [sound, setSound] = useState(true);
-  const [soundPlayed, setSoundPlayed] = useState(false);
   const buzzButton = useRef(null);
   const queueRef = useRef(null);
+  // Tracks which player ids currently in the queue we've already played a
+  // sound for, so every *distinct* buzz gets its own sound instead of just
+  // the first one per round.
+  const playedBuzzIdsRef = useRef(new Set());
 
   const buzzSound = new Howl({
     src: [
@@ -27,14 +30,12 @@ export default function Table(game) {
   });
 
   const playSound = () => {
-    if (sound && !soundPlayed) {
+    if (sound) {
       buzzSound.play();
-      setSoundPlayed(true);
     }
   };
 
   useEffect(() => {
-    console.log(game.G.queue, Date.now());
     // reset buzzer based on game
     if (!game.G.queue[game.playerID]) {
       // delay the reset, in case game state hasn't reflected your buzz yet
@@ -51,12 +52,29 @@ export default function Table(game) {
       }
     }
 
-    // reset ability to play sound if there is no pending buzzer
-    if (isEmpty(game.G.queue)) {
-      setSoundPlayed(false);
-    } else if (loaded) {
-      playSound();
-    }
+    // Play a sound for every player whose buzz newly lands in the queue.
+    // playedBuzzIdsRef is kept in sync with queue membership: an id is
+    // forgotten as soon as it leaves the queue (via resetBuzzer or
+    // resetBuzzers), so if that same player buzzes again later they get a
+    // fresh sound rather than being silenced by a stale "already played"
+    // flag.
+    const playedIds = playedBuzzIdsRef.current;
+    const currentIds = Object.keys(game.G.queue);
+    playedIds.forEach((id) => {
+      if (!game.G.queue[id]) {
+        playedIds.delete(id);
+      }
+    });
+    currentIds.forEach((id) => {
+      if (!playedIds.has(id)) {
+        playedIds.add(id);
+        // Don't sound on initial mount for buzzes already in the queue
+        // (e.g. joining mid-round) - only for buzzes that land afterward.
+        if (loaded) {
+          playSound();
+        }
+      }
+    });
 
     if (!loaded) {
       setLoaded(true);
@@ -68,6 +86,10 @@ export default function Table(game) {
   const attemptBuzz = () => {
     if (!buzzed) {
       playSound();
+      // Mark our own id as already sounded so the useEffect above doesn't
+      // play a second, duplicate sound once the move round-trips and
+      // confirms our buzz in the queue.
+      playedBuzzIdsRef.current.add(game.playerID);
       game.moves.buzz(game.playerID);
       setBuzzer(true);
       setLastBuzz(Date.now());
