@@ -1,7 +1,7 @@
 const path = require('path');
 const serve = require('koa-static');
 const ratelimit = require('koa-ratelimit');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 const { koaBody } = require('koa-body');
 
 const { Server, Origins } = require('boardgame.io/server');
@@ -18,7 +18,7 @@ function randomString(length, chars) {
 
 const server = Server({
   games: [Buzzer],
-  generateCredentials: () => uuidv4(),
+  generateCredentials: () => randomUUID(),
   uuid: () => randomString(6, 'ABCDEFGHJKLMNPQRSTUVWXYZ'),
   origins: [Origins.LOCALHOST_IN_DEVELOPMENT],
   db: new CappedInMemory(),
@@ -253,7 +253,7 @@ app.use(async (ctx, next) => {
           return;
         }
 
-        const playerCredentials = uuidv4();
+        const playerCredentials = randomUUID();
         seat.credentials = playerCredentials;
         await server.db.setMetadata(gameID, metadata);
 
