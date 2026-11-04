@@ -3082,6 +3082,11 @@ async-function@^1.0.0:
   resolved "https://registry.yarnpkg.com/async-function/-/async-function-1.0.0.tgz#509c9fca60eaf85034c6829838188e4e4c8ffb2b"
   integrity sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==
 
+async-ratelimiter@^1.5.2:
+  version "1.6.11"
+  resolved "https://registry.yarnpkg.com/async-ratelimiter/-/async-ratelimiter-1.6.11.tgz#aa107307e1f5ca88a26f10a3a56f9919e7b63111"
+  integrity sha512-hmBQAsCV5zuitRYel9oX8J6mJm2+hte2zQjBD7p1wb3y0eRP9wm8awGYTruSC+d1QP7SDzsM43TceroN6YWhNA==
+
 async@^3.2.6:
   version "3.2.6"
   resolved "https://registry.yarnpkg.com/async/-/async-3.2.6.tgz#1b0728e14929d51b85b449b7f06e27c1145e38ce"
@@ -7429,15 +7434,13 @@ koa-convert@^2.0.0:
     co "^4.6.0"
     koa-compose "^4.1.0"
 
-koa-ratelimit@^4.2.1:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/koa-ratelimit/-/koa-ratelimit-4.3.0.tgz#2129657f1ca5d42d7aba3faba11ce623d6ee9071"
-  integrity sha512-Q6vothwYLyebWcdqplHwqJ9nd+QUqKmbRz1CqzCCUhNsEpEvGXaY7ZVXl3g4RiQq7LnAj643zlWD1WX8UllQBw==
+koa-ratelimit@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/koa-ratelimit/-/koa-ratelimit-6.0.0.tgz#9d83e3dba7f7147df45937929b0356924052fda0"
+  integrity sha512-UH1CXCF+yVhx5r5Fvx5eOKhc8sMHU/HhGBNCOaJ/SLO0+IcB6g5aKIE63eWsq7L3niwQWLfEbDtNGU3epKt0Hg==
   dependencies:
-    debug "^4.1.1"
-    lodash.defaults "^4.2.0"
-    ms "^2.1.1"
-    ratelimiter "^3.2.0"
+    async-ratelimiter "^1.5.2"
+    ms "^2.1.3"
 
 koa-send@^5.0.0:
   version "5.0.1"
@@ -7586,11 +7589,6 @@ lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
   integrity sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==
-
-lodash.defaults@^4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/lodash.defaults/-/lodash.defaults-4.2.0.tgz#d09178716ffea4dde9e5fb7b37f6f0802274580c"
-  integrity sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==
 
 lodash.isplainobject@^4.0.6:
   version "4.0.6"
@@ -7814,7 +7812,7 @@ mkdirp@~0.5.1:
   dependencies:
     minimist "^1.2.6"
 
-ms@2.1.3, ms@^2.1.1, ms@^2.1.3:
+ms@2.1.3, ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
@@ -9061,11 +9059,6 @@ range-parser@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.1.tgz#3cf37023d199e1c24d1a55b84800c2f3e6468031"
   integrity sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==
-
-ratelimiter@^3.2.0:
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/ratelimiter/-/ratelimiter-3.4.1.tgz#fa69e94937413382a926aaa17aaeaa6263af4659"
-  integrity sha512-5FJbRW/Jkkdk29ksedAfWFkQkhbUrMx3QJGwMKAypeIiQf4yrLW+gtPKZiaWt4zPrtw1uGufOjGO7UGM6VllsQ==
 
 raw-body@^2.2.0, raw-body@^2.3.3, raw-body@~2.5.3:
   version "2.5.3"

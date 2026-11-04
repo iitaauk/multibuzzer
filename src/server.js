@@ -64,10 +64,12 @@ app.use(
     db: db,
     duration: RATE_LIMIT_DURATION_MS,
     errorMessage: 'Too many requests',
-    id: (ctx) => ctx.ip,
+    // Behind Cloudflare Tunnel ctx.ip is cloudflared's address, shared by every user.
+    id: (ctx) => ctx.get('CF-Connecting-IP') || ctx.ip,
     max: RATE_LIMIT_MAX,
+    // Limiting GETs would let the 5s kick-check poll from 10 players on one wifi exhaust the per-IP budget.
     whitelist: (ctx) => {
-      return !ctx.path.includes(`games/${Buzzer.name}`);
+      return ctx.method !== 'POST' || !ctx.path.includes(`games/${Buzzer.name}`);
     },
   })
 );
